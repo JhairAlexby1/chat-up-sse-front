@@ -7,6 +7,9 @@ import Image from "next/image";
 
 interface Person {
   nombre: string;
+    email: string;
+    password: string;
+    conectado: boolean;
 }
 
 export const ConnectedPeople = () => {
@@ -28,8 +31,31 @@ export const ConnectedPeople = () => {
     }
   };
 
+  const eventSource = new EventSource("http://localhost:3001/usuarios/esperarConexiones");
+
+  eventSource.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    setPeople(data.totalUsuariosConectados);
+  };
+
+  eventSource.onerror = (error) => {
+    console.error("There was an error with the SSE connection:", error);
+    eventSource.close();
+  };
+
   useEffect(() => {
-    fetchConnectedPeople();
+    const eventSource = new EventSource("http://localhost:3001/usuarios/esperarConexiones");
+
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      setPeople(data.totalUsuariosConectados);
+    };
+
+    eventSource.onerror = (error) => {
+      console.error("There was an error with the SSE connection:", error);
+      eventSource.close();
+    };
+
   }, []);
 
   return (
